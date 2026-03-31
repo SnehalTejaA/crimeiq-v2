@@ -25,8 +25,8 @@ CrimeIQ is a Streamlit web application that wraps the Phase 3 analytical work
 ## Setup
 
 ### 1. Clone / download
-```
-git clone <your-repo>
+```bash
+git clone https://github.com/SnehalTejaA/crimeiq.git
 cd crimeiq
 ```
 
