@@ -416,7 +416,7 @@ with tab4:
     with col2:
         st.markdown("**Feature Importances (Random Forest)**")
         fi = pd.Series(
-            model_bundle["model"].feature_importances_,
+            model_bundle["rf_model"].feature_importances_,
             index=[FEATURE_LABELS[f] for f in FEATURES]
         ).sort_values(ascending=True)
         fig_fi = px.bar(
@@ -435,8 +435,7 @@ with tab4:
         st.markdown("**Top 10 Features by Importance**")
         fi_table = pd.DataFrame({
             "Feature":    [FEATURE_LABELS[f] for f in FEATURES],
-            "Importance": model_bundle["model"].named_steps[
-                              "model"].feature_importances_,
+            "Importance": model_bundle["rf_model"].feature_importances_,
         }).sort_values("Importance", ascending=False).head(10)
         fi_table["Importance"] = fi_table["Importance"].round(4)
         fi_table = fi_table.reset_index(drop=True)
