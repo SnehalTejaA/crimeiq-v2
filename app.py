@@ -432,6 +432,18 @@ with tab4:
         )
         st.plotly_chart(fig_fi, use_container_width=True)
 
+        st.markdown("**Top 10 Features by Importance**")
+        fi_table = pd.DataFrame({
+            "Feature":    [FEATURE_LABELS[f] for f in FEATURES],
+            "Importance": model_bundle["model"].named_steps[
+                              "model"].feature_importances_,
+        }).sort_values("Importance", ascending=False).head(10)
+        fi_table["Importance"] = fi_table["Importance"].round(4)
+        fi_table = fi_table.reset_index(drop=True)
+        fi_table.index += 1
+        st.dataframe(fi_table, use_container_width=True,
+                     hide_index=False)
+
     col3, col4 = st.columns(2)
 
     # SHAP summary (mean absolute)
@@ -498,6 +510,23 @@ with tab4:
         "Status": ["✅ Best (used)", "🟡 Runner-up", "🔵 Baseline"],
     }
     st.dataframe(pd.DataFrame(perf_data), use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+    st.markdown("**Model Serialization (Deployment Readiness)**")
+    import os
+    if os.path.exists("crime_model.pkl"):
+        size_kb = round(os.path.getsize("crime_model.pkl") / 1024, 1)
+        st.success(
+            f"✅ Model saved to `crime_model.pkl` ({size_kb} KB) — "
+            f"ready for production deployment via joblib"
+        )
+    else:
+        st.warning("⚠️ crime_model.pkl not found — retrain to generate")
+    st.caption(
+        "The trained pipeline (imputer + scaler + Random Forest) is "
+        "serialized to disk using joblib, matching the Phase 4 "
+        "deployment workflow."
+    )
 
     st.markdown("---")
     st.markdown("**Model Drift Monitor**")
@@ -722,6 +751,23 @@ with tab6:
     )
     st.plotly_chart(fig_cat, use_container_width=True)
 
+    st.markdown("**Category Importance Ranking**")
+    st.caption(
+        "Average absolute correlation per criminology category — "
+        "matches teammate's Phase 4 research alignment analysis."
+    )
+    cat_importance = (
+        corr_df.groupby("Category")["Abs Corr"]
+        .mean()
+        .reset_index()
+        .rename(columns={"Abs Corr": "Avg Correlation"})
+        .sort_values("Avg Correlation", ascending=False)
+        .reset_index(drop=True)
+    )
+    cat_importance.index += 1
+    st.dataframe(cat_importance, use_container_width=True,
+                 hide_index=False)
+
     # Full feature correlation table
     st.markdown("**Individual Feature Correlations with Crime Rate**")
     st.dataframe(
@@ -751,6 +797,29 @@ with tab6:
     Use the **What-If Simulator** (Tab 2) to explore local 
     explanations for any custom county profile interactively.
     """)
+
+    st.markdown("**Sample Local Explanation (Index 0)**")
+    st.caption(
+        "Matches teammate's Cell 26 — demonstrates local prediction "
+        "for a specific county sample."
+    )
+    try:
+        sample_input = model_bundle["X_test"].iloc[0]
+        sample_pred  = predict_crime(
+            model_bundle, sample_input.to_dict()
+        )
+        sample_df = pd.DataFrame({
+            "Feature": [FEATURE_LABELS.get(f, f)
+                        for f in sample_input.index],
+            "Value":   [round(v, 5)
+                        for v in sample_input.values],
+        })
+        st.dataframe(sample_df, use_container_width=True,
+                     hide_index=True, height=250)
+        st.metric("Predicted Crime Rate for this Sample",
+                  f"{sample_pred:.5f}")
+    except Exception as e:
+        st.warning(f"Could not generate sample explanation: {e}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 7 — BIAS & FAIRNESS AUDIT

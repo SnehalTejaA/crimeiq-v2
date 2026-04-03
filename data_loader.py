@@ -126,35 +126,45 @@ def prepare_xy(df):
 
 
 def train_model(df):
-    """
-    Train the Random Forest model (mirrors Phase 3 best model, R²≈0.905).
-    Returns: model, scaler, X_test, y_test, shap_values, explainer, feature_names
-    """
+    from sklearn.pipeline import Pipeline
+    from sklearn.impute import SimpleImputer
+
     X, y = prepare_xy(df)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    scaler = StandardScaler()
-    X_train_sc = scaler.fit_transform(X_train)
-    X_test_sc  = scaler.transform(X_test)
 
-    model = RandomForestRegressor(
-        n_estimators=200, max_depth=10,
-        min_samples_split=5, random_state=42, n_jobs=-1
+    model_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler()),
+        ('model', RandomForestRegressor(
+            n_estimators=200, max_depth=10,
+            min_samples_split=5, random_state=42, n_jobs=-1
+        ))
+    ])
+    model_pipeline.fit(X_train, y_train)
+
+    X_test_transformed = model_pipeline.named_steps['scaler'].transform(
+        model_pipeline.named_steps['imputer'].transform(X_test)
     )
-    model.fit(X_train_sc, y_train)
 
-    y_pred = model.predict(X_test_sc)
+    y_pred = model_pipeline.predict(X_test)
     r2   = r2_score(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
-    # SHAP explainability
-    explainer   = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test_sc)
+    rf_model  = model_pipeline.named_steps['model']
+    explainer = shap.TreeExplainer(rf_model)
+    shap_values = explainer.shap_values(X_test_transformed)
+
+    # Save model to disk (matches teammate's joblib deployment step)
+    import joblib
+    joblib.dump(model_pipeline, "crime_model.pkl")
 
     return {
-        "model":         model,
-        "scaler":        scaler,
+        "model":         model_pipeline,
+        "rf_model":      rf_model,
+        "scaler":        model_pipeline.named_steps['scaler'],
+        "imputer":       model_pipeline.named_steps['imputer'],
         "X_test":        X_test,
         "y_test":        y_test,
         "shap_values":   shap_values,
@@ -166,26 +176,20 @@ def train_model(df):
 
 
 def predict_crime(model_bundle, feature_dict):
-    """
-    Predict crime rate from a dict of feature values.
-    Returns predicted crmrte as a float.
-    """
     model   = model_bundle["model"]
-    scaler  = model_bundle["scaler"]
     X_input = pd.DataFrame([feature_dict])[FEATURES]
-    X_sc    = scaler.transform(X_input)
-    return float(model.predict(X_sc)[0])
+    return float(model.predict(X_input)[0])
 
 
 def get_shap_for_input(model_bundle, feature_dict):
-    """Return SHAP values for a single prediction input."""
     explainer = model_bundle["explainer"]
+    imputer   = model_bundle["imputer"]
     scaler    = model_bundle["scaler"]
     X_input   = pd.DataFrame([feature_dict])[FEATURES]
-    X_sc      = scaler.transform(X_input)
-    sv = explainer.shap_values(X_sc)
-    # TreeExplainer returns 2D array (n_samples, n_features); flatten safely
-    sv_row = sv[0] if sv.ndim == 2 else sv
+    X_imp     = imputer.transform(X_input)
+    X_sc      = scaler.transform(X_imp)
+    sv        = explainer.shap_values(X_sc)
+    sv_row    = sv[0] if hasattr(sv, '__len__') and sv.ndim == 2 else sv
     return dict(zip(FEATURES, sv_row))
 
 
@@ -280,13 +284,11 @@ def detect_drift(train_data, test_data):
     return {"per_feature": drift_scores, "overall_mean": overall}
 
 def run_fairness_audit(model_bundle):
-    model   = model_bundle["model"]
-    scaler  = model_bundle["scaler"]
-    X_test  = model_bundle["X_test"].copy()
-    y_test  = model_bundle["y_test"].copy()
+    model  = model_bundle["model"]
+    X_test = model_bundle["X_test"].copy()
+    y_test = model_bundle["y_test"].copy()
 
-    X_sc   = scaler.transform(X_test)
-    y_pred = model.predict(X_sc)
+    y_pred = model.predict(X_test)
 
     X_test = X_test.reset_index(drop=True)
     y_test = y_test.reset_index(drop=True)
