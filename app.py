@@ -500,10 +500,10 @@ with tab4:
     # Scatter: density vs crime
     st.markdown("**Population Density vs Crime Rate**")
     fig_scatter = px.scatter(
-        df, x="density", y=TARGET,
+        df, x="ldensity", y=TARGET,
         color="year",
         opacity=0.6,
-        labels={"density": "Population Density", TARGET: "Crime Rate", "year": "Year"},
+        labels={"ldensity": "Log Population Density", TARGET: "Crime Rate", "year": "Year"},
         color_continuous_scale="Viridis",
         trendline="ols",
     )
