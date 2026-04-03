@@ -504,9 +504,9 @@ with tab4:
     st.markdown("**Model Performance Summary**")
     perf_data = {
         "Model": ["Random Forest", "Gradient Boosting", "Ridge Regression"],
-        "R²":    [model_bundle["r2"], 0.884, 0.712],
-        "RMSE":  [model_bundle["rmse"], 0.000182, 0.000310],
-        "Status": ["✅ Best (used)", "🟡 Runner-up", "🔵 Baseline"],
+        "R²":    [model_bundle["r2"], "N/A", "N/A"],
+        "RMSE":  [model_bundle["rmse"], "N/A", "N/A"],
+        "Status": ["✅ Best (used)", "🟡 Not retrained on Phase 4 features", "🔵 Not retrained on Phase 4 features"],
     }
     st.dataframe(pd.DataFrame(perf_data), use_container_width=True, hide_index=True)
 
@@ -706,7 +706,7 @@ with tab6:
     argue that crime is influenced by the probability of arrest and 
     conviction (law enforcement deterrence), economic opportunity 
     (wages, tax revenue), and demographic composition. The 
-    correlations below confirm our 14 features align with this theory.
+    correlations below confirm our 15 features align with this theory.
     """)
 
     from data_loader import FEATURE_CATEGORIES
