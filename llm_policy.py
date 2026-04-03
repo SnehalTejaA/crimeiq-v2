@@ -1,8 +1,10 @@
 import requests
 import json
 
-CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
-MODEL = "claude-sonnet-4-20250514"
+import streamlit as st
+
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+MODEL = "llama-3.3-70b-versatile"
 
 
 def generate_policy_recommendations(
@@ -69,18 +71,25 @@ Keep the tone professional but accessible. Use markdown formatting. Be specific 
     }
 
     try:
+        api_key = st.secrets.get("GROQ_API_KEY", "")
+        if not api_key:
+            return "⚠️ No Groq API Key found. Please add GROQ_API_KEY to .streamlit/secrets.toml"
+            
         response = requests.post(
-            CLAUDE_API_URL,
-            headers={"Content-Type": "application/json"},
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
             json=payload,
             timeout=30,
         )
         response.raise_for_status()
         data = response.json()
-        return data["content"][0]["text"]
+        return data["choices"][0]["message"]["content"]
 
     except requests.exceptions.RequestException as e:
-        return f"⚠️ Could not reach Claude API: {str(e)}\n\nPlease check your API key configuration."
+        return f"⚠️ Could not reach Groq API: {str(e)}\n\nPlease check your internet connection or API settings."
     except (KeyError, IndexError) as e:
         return f"⚠️ Unexpected API response format: {str(e)}"
 
@@ -115,14 +124,18 @@ Be concise and analytical. Use plain language."""
     }
 
     try:
+        api_key = st.secrets.get("GROQ_API_KEY", "")
         response = requests.post(
-            CLAUDE_API_URL,
-            headers={"Content-Type": "application/json"},
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
             json=payload,
             timeout=30,
         )
         response.raise_for_status()
         data = response.json()
-        return data["content"][0]["text"]
+        return data["choices"][0]["message"]["content"]
     except Exception as e:
         return f"⚠️ Could not generate cluster narrative: {str(e)}"

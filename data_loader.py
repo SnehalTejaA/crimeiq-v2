@@ -234,6 +234,49 @@ def interpret_query(query):
     else:
         return None
 
+def ai_agent(user_query, feature_dict, model_bundle):
+    """
+    Unified AI agent pipeline — takes a plain English query,
+    detects the scenario, simulates it, and returns a result dict.
+    Mirrors the Phase 4 notebook ai_agent() implementation.
+    """
+    scenario = interpret_query(user_query)
+    if scenario:
+        simulated = run_scenario(feature_dict, scenario)
+    else:
+        simulated = feature_dict.copy()
+    prediction = predict_crime(model_bundle, simulated)
+    return {
+        "query":                user_query,
+        "scenario_detected":    scenario if scenario else "none",
+        "simulated_features":   simulated,
+        "predicted_crime_rate": round(float(prediction), 6),
+    }
+
+def detect_drift(train_data, test_data):
+    """
+    Computes mean absolute difference between train and test 
+    feature distributions to detect data drift.
+    Mirrors the Phase 4 notebook detect_drift() implementation.
+    Returns a dict with per-feature drift scores and overall mean.
+    """
+    common_cols = [c for c in train_data.columns 
+                   if c in test_data.columns]
+    drift_scores = {}
+    for col in common_cols:
+        try:
+            score = abs(
+                train_data[col].mean() - test_data[col].mean()
+            )
+            drift_scores[col] = round(float(score), 6)
+        except Exception:
+            pass
+    overall = round(
+        sum(drift_scores.values()) / len(drift_scores) 
+        if drift_scores else 0.0, 6
+    )
+    return {"per_feature": drift_scores, "overall_mean": overall}
+
 def run_fairness_audit(model_bundle):
     model   = model_bundle["model"]
     scaler  = model_bundle["scaler"]

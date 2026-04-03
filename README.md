@@ -16,7 +16,7 @@ CrimeIQ integrates Phase 3 analytical work with Phase 4 real-world deployment fe
 |-----|--------------|
 | 🗺️ Crime Heatmap | Folium choropleth of NC crime rates by county, filterable by year |
 | 🎛️ What-If Simulator | Sliders for every feature → live predicted crime rate + SHAP waterfall |
-| 🤖 AI Policy Advisor | Groq API generates evidence-based policy recommendations from SHAP drivers |
+| 🤖 AI Policy Advisor | Claude API (Anthropic) generates evidence-based policy recommendations from SHAP drivers |
 | 📊 Analytics Dashboard | Trend charts, feature importance, SHAP summary, model performance |
 | 🎭 Scenario Simulation | Preset scenarios simulating systemic socioeconomic or law enforcement shifts |
 | 🔬 Research Alignment | Validates feature selection against established criminology theory |
@@ -28,17 +28,17 @@ CrimeIQ integrates Phase 3 analytical work with Phase 4 real-world deployment fe
 
 ### 1. Clone / download
 ```bash
-git clone https://github.com/SnehalTejaA/crimeiq.git
+git clone https://github.com/SnehalTejaA/crimeiq-v2.git
 cd crimeiq
 ```
 
 ### 2. Install dependencies
-```
+```bash
 pip install -r requirements.txt
 ```
 
 ### 3. Run the app
-```
+```bash
 streamlit run app.py
 ```
 
@@ -48,9 +48,9 @@ The app loads data directly from GitHub on first run (cached after that).
 
 ## Project Structure
 
-```
+```text
 crimeiq/
-├── app.py            # Main Streamlit app — all 4 tabs
+├── app.py            # Main Streamlit app — all 7 tabs
 ├── data_loader.py    # Data loading, model training, prediction helpers
 ├── heatmap.py        # Folium heatmap builder
 ├── llm_policy.py     # Claude API integration for policy recommendations
@@ -66,9 +66,9 @@ crimeiq/
 - 630 observations · 90 counties · 7 years
 - Source: [GitHub repo](https://github.com/nishapattim05-del/crime-project-data)
 
-**14 VIF-selected features used (all VIF < 10):**
+**15 Features used (14 VIF-selected + Phase 4 extensions):**
 `prbarr`, `prbconv`, `prbpris`, `avgsen`, `polpc`, `density`, `taxpc`,
-`west`, `central`, `urban`, `pctmin80`, `wcon`, `wtuc`, `wfed`
+`west`, `central`, `urban`, `pctmin80`, `wcon`, `wtuc`, `wfed`, `wage_gap_service_mfg`
 
 **Target variable:** `crmrte` (crimes per person)
 
@@ -86,16 +86,29 @@ The Random Forest Regressor is trained fresh on app startup (cached via
 
 ---
 
-## AI Policy Advisor
+## Phase 4 Extensions
 
-The policy recommendation engine sends the SHAP feature drivers for the
-current What-If profile to the Claude Sonnet API and receives a structured
-policy brief with:
+- **Scenario Simulation Engine:** Compares custom baseline feature inputs against 4 predefined systemic scenarios (or Natural Language defined scenarios).
+- **Research Alignment:** Evaluates variables against Becker (1968) and Cornwell & Trumbull (1994) foundational principles of deterrence and economic opportunity.
+- **Bias & Fairness Audit:** Evaluates predictive differences across 4 subgroups (e.g. Urban vs Rural, High vs Low Minority).
+- **Model Drift Monitor:** Computes and visualizes out-of-distribution shifts between continuous feature vectors using Mean Absolute Difference.
+- **AI Agent Pipeline:** A unified backend python wrapper that intercepts user queries, detects the requisite scenario automatically, simulates it against the Random Forest, and returns the unified response dictionary.
 
-1. Situation summary
-2. Top 3 actionable policy recommendations (tied to SHAP drivers)
-3. Risk factors to monitor
-4. One honest data limitation
+---
+
+## API Deployment Concept
+
+POST `/predict`
+Input:  `{ "prbarr": 0.3, "polpc": 0.002, ... all 14 features }`
+Output: `{ "predicted_crime_rate": 0.032 }`
+
+POST `/simulate`
+Input:  `{ "scenario": "High Policing", "features": {...} }`
+Output: `{ "baseline": 0.031, "scenario": 0.028, "delta_pct": -9.7 }`
+
+POST `/agent`
+Input:  `{ "query": "what if police presence decreases?", "features": {...} }`
+Output: `{ "scenario_detected": "Police Reduction", "predicted_crime_rate": 0.034 }`
 
 ---
 

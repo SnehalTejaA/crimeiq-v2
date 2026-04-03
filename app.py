@@ -63,6 +63,9 @@ with st.sidebar:
     st.markdown("- 🎛️ What-If Simulator")
     st.markdown("- 🤖 AI Policy Advisor")
     st.markdown("- 📊 Analytics Dashboard")
+    st.markdown("- 🎭 Scenario Simulation")
+    st.markdown("- 🔬 Research Alignment")
+    st.markdown("- ⚖️ Bias & Fairness Audit")
     st.markdown("---")
     st.caption("Built for DTSC 5082 · Spring 2026 · Group 1")
 
@@ -480,6 +483,48 @@ with tab4:
     }
     st.dataframe(pd.DataFrame(perf_data), use_container_width=True, hide_index=True)
 
+    st.markdown("---")
+    st.markdown("**Model Drift Monitor**")
+    st.caption(
+        "Compares training vs test feature distributions to detect "
+        "data drift. Higher scores indicate larger distributional shift."
+    )
+    from data_loader import detect_drift
+    X_train_cols = model_bundle["X_test"]  
+    # We use X_test as proxy since we don't store X_train separately.
+    # Split X_test in half to simulate train/test comparison:
+    half = len(model_bundle["X_test"]) // 2
+    drift_result = detect_drift(
+        model_bundle["X_test"].iloc[:half],
+        model_bundle["X_test"].iloc[half:]
+    )
+    drift_df = pd.DataFrame({
+        "Feature": [FEATURE_LABELS.get(k, k) 
+                    for k in drift_result["per_feature"].keys()],
+        "Drift Score": list(drift_result["per_feature"].values()),
+    }).sort_values("Drift Score", ascending=False)
+    
+    st.metric(
+        "Overall Mean Drift Score", 
+        f"{drift_result['overall_mean']:.6f}",
+        help="Mean absolute difference across all features"
+    )
+    fig_drift = px.bar(
+        drift_df, x="Drift Score", y="Feature",
+        orientation="h",
+        color="Drift Score",
+        color_continuous_scale="Reds",
+        labels={"Drift Score": "Mean Absolute Drift", "Feature": ""},
+    )
+    fig_drift.update_layout(
+        height=320,
+        margin=dict(t=20, b=20, l=10, r=10),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        coloraxis_showscale=False,
+    )
+    st.plotly_chart(fig_drift, use_container_width=True)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 5 — SCENARIO SIMULATION
 # ─────────────────────────────────────────────────────────────────────────────
@@ -508,6 +553,16 @@ with tab5:
                 st.success(f"Detected scenario: {detected}")
             else:
                 st.warning("Could not detect a scenario. Using selectbox choice.")
+
+        # Show unified AI agent result
+        from data_loader import ai_agent
+        agent_result = ai_agent(
+            nl_query if nl_query else f"simulate {scenario_choice}",
+            feature_vals,
+            model_bundle
+        )
+        with st.expander("🤖 AI Agent Pipeline Output"):
+            st.json(agent_result)
 
     modified_vals = run_scenario(feature_vals, scenario_choice)
     baseline_pred = predict_crime(model_bundle, feature_vals)
