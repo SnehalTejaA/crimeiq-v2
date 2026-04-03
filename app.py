@@ -361,19 +361,33 @@ with tab3:
             st.info("Configure sliders in the What-If Simulator tab first.")
 
     if run_llm:
-        with st.spinner("Claude is analysing the data and writing recommendations…"):
-            shap_vals = get_shap_for_input(model_bundle, feature_vals)
-            predicted_now = predict_crime(model_bundle, feature_vals)
-            rec_text = generate_policy_recommendations(
-                shap_dict=shap_vals,
-                cluster_id=cluster_id,
-                predicted_crime=predicted_now,
-                baseline_crime=baseline_crime,
-                feature_labels=FEATURE_LABELS,
+        import os
+        api_key_present = (
+            os.environ.get("GROQ_API_KEY") or
+            os.environ.get("ANTHROPIC_API_KEY")
+        )
+        if not api_key_present:
+            st.error(
+                "⚠️ No API key found. Please set your GROQ_API_KEY "
+                "or ANTHROPIC_API_KEY environment variable to use "
+                "the AI Policy Advisor."
             )
-        st.markdown("---")
-        st.markdown("#### 📋 Policy Report")
-        st.markdown(rec_text)
+        else:
+            with st.spinner(
+                "AI is analysing the data and writing recommendations…"
+            ):
+                shap_vals = get_shap_for_input(model_bundle, feature_vals)
+                predicted_now = predict_crime(model_bundle, feature_vals)
+                rec_text = generate_policy_recommendations(
+                    shap_dict=shap_vals,
+                    cluster_id=cluster_id,
+                    predicted_crime=predicted_now,
+                    baseline_crime=baseline_crime,
+                    feature_labels=FEATURE_LABELS,
+                )
+            st.markdown("---")
+            st.markdown("#### 📋 Policy Report")
+            st.markdown(rec_text)
 
     st.markdown("---")
     st.markdown("#### 🗂️ Cluster Profiles (K-Means, k=3)")
