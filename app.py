@@ -504,9 +504,9 @@ with tab4:
     st.markdown("**Model Performance Summary**")
     perf_data = {
         "Model": ["Random Forest", "Gradient Boosting", "Ridge Regression"],
-        "R²":    [model_bundle["r2"], "N/A", "N/A"],
-        "RMSE":  [model_bundle["rmse"], "N/A", "N/A"],
-        "Status": ["✅ Best (used)", "🟡 Not retrained on Phase 4 features", "🔵 Not retrained on Phase 4 features"],
+        "R²":    [model_bundle["r2"], model_bundle["gb_r2"], model_bundle["ridge_r2"]],
+        "RMSE":  [model_bundle["rmse"], model_bundle["gb_rmse"], model_bundle["ridge_rmse"]],
+        "Status": ["✅ Best (used)", "🟡 Runner-up", "🔵 Baseline"],
     }
     st.dataframe(pd.DataFrame(perf_data), use_container_width=True, hide_index=True)
 

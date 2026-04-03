@@ -160,6 +160,32 @@ def train_model(df):
     import joblib
     joblib.dump(model_pipeline, "crime_model.pkl")
 
+
+    # Gradient Boosting
+    gb_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler()),
+        ('model', GradientBoostingRegressor(
+            n_estimators=100, max_depth=4,
+            learning_rate=0.1, random_state=42
+        ))
+    ])
+    gb_pipeline.fit(X_train, y_train)
+    gb_pred = gb_pipeline.predict(X_test)
+    gb_r2   = round(r2_score(y_test, gb_pred), 4)
+    gb_rmse = round(np.sqrt(mean_squared_error(y_test, gb_pred)), 6)
+
+    # Ridge Regression
+    ridge_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler()),
+        ('model', Ridge(alpha=1.0))
+    ])
+    ridge_pipeline.fit(X_train, y_train)
+    ridge_pred = ridge_pipeline.predict(X_test)
+    ridge_r2   = round(r2_score(y_test, ridge_pred), 4)
+    ridge_rmse = round(np.sqrt(mean_squared_error(y_test, ridge_pred)), 6)
+
     return {
         "model":         model_pipeline,
         "rf_model":      rf_model,
@@ -172,7 +198,12 @@ def train_model(df):
         "feature_names": FEATURES,
         "r2":            round(r2, 4),
         "rmse":          round(rmse, 6),
+        "gb_r2":         gb_r2,
+        "gb_rmse":       gb_rmse,
+        "ridge_r2":      ridge_r2,
+        "ridge_rmse":    ridge_rmse,
     }
+
 
 
 def predict_crime(model_bundle, feature_dict):
