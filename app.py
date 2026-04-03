@@ -16,7 +16,7 @@ from data_loader import (
     get_shap_for_input, get_cluster_profiles,
     FEATURES, FEATURE_LABELS, FEATURE_RANGES, TARGET, DATA_URL
 )
-from heatmap import build_heatmap
+from heatmap import NC_COUNTY_COORDS
 from llm_policy import generate_policy_recommendations, generate_cluster_narrative
 
 # ── Page config ──────────────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ with tab1:
         )
 
     # Crime rate bubble map using Plotly (reliable cross-version)
-    from heatmap import NC_COUNTY_COORDS
+
     county_agg = (
         year_data.groupby("county")[TARGET]
         .mean()
