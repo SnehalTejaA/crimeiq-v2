@@ -51,9 +51,11 @@ The app loads data directly from GitHub on first run (cached after that).
 ```text
 crimeiq/
 ├── app.py            # Main Streamlit app — all 7 tabs
-├── data_loader.py    # Data loading, model training, prediction helpers
-├── heatmap.py        # Folium heatmap builder
-├── llm_policy.py     # Claude API integration for policy recommendations
+├── data_loader.py    # Data loading, feature engineering, 
+│                     # model training, scenario simulation,
+│                     # fairness audit, drift detection
+├── heatmap.py        # NC county coordinates for Plotly map
+├── llm_policy.py     # Groq API integration for policy recommendations
 ├── requirements.txt
 └── README.md
 ```
