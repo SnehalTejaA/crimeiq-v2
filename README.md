@@ -144,7 +144,7 @@ data.
 
 | Member | Role |
 |--------|------|
-| Snehal Teja Adidam | Advanced analytics (VIF, Fixed Effects, SHAP, K-Means) |
-| Nisha Ravi Babu | EDA and statistical modelling |
-| Shivani Nagaram | Data cleaning and feature engineering |
-| Mahi Bharat Patel | Visualisations and report compilation |
+| Snehal Teja Adidam | Advanced analytics (VIF analysis, Fixed Effects regression, SHAP explainability, K-Means clustering); designed and built Crime Heatmap, What-If Simulator, AI Policy Advisor, and Analytics Dashboard; engineered and implemented Scenario Simulation, Research Alignment, and Bias & Fairness Audit into a live interactive platform; deployment architecture (Pipeline serialization, joblib model export, Streamlit Cloud); GitHub repository management |
+| Nisha Ravi Babu | EDA, statistical modelling, and real-world system design — feature set design including derived variables (log density, wage gap, conviction probability transforms), scenario simulation, research alignment framework, AI agent pipeline, bias audit methodology, and deployment architecture |
+| Shivani Nagaram | Data collection, cleaning, and feature engineering — missing value treatment, data quality validation, variable transformation, and dataset preparation |
+| Mahi Bharat Patel | Visualisation development and report compilation — charts, dashboards, team coordination, and project documentation |
